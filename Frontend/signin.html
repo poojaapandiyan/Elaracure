@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css" />
+  <title>Sign In - Elaracure Trainer</title>
+</head>
+<body>
+  <!-- Header Section -->
+  <header class="header">
+    <div class="container">
+      <nav class="navbar">
+        <div class="brand">
+        <img src="logo.png" alt="logo" class="logo-img"/>
+        <a href="index.html" class="logo-text">Elaracure</a>
+        </div>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="signin.html"class="active">Sign In</a></li>
+          <li><a href="signup.html" >Sign Up</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Sign In Section -->
+  <section class="auth-section">
+    <div class="container">
+      <h1>Sign In</h1>
+      <form class="auth-form">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn primary">Sign In</button>
+        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+      </form>
+    </div>
+  </section>
+  <footer class="footer">
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+
+  <!-- Firebase and Backend Integration -->
+  <script type="module">
+    // 1️⃣ Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqQ-5c3BR1Fr84C72YrnnBLSCCh71Q1A0",
+      authDomain: "elaracure-80917.firebaseapp.com",
+      databaseURL: "https://elaracure-80917-default-rtdb.firebaseio.com",
+      projectId: "elaracure-80917",
+      storageBucket: "elaracure-80917.appspot.com",
+      messagingSenderId: "870899511407",
+      appId: "1:870899511407:web:a521a2ee1154151d961d9a",
+      measurementId: "G-3JT0F7DR5T"
+    };
+
+    // 2️⃣ Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // 3️⃣ Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // 4️⃣ Handle form submit
+    document.querySelector('.auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        alert("✅ Signed in as " + user.email);
+
+        // 5️⃣ Log login in Firebase Database
+        const loginRef = ref(db, 'logins/' + user.uid);
+        await set(loginRef, {
+          email: user.email,
+          lastLogin: new Date().toISOString()
+        });
+
+        // 6️⃣ Get Firebase ID token
+        const token = await user.getIdToken();
+
+        // 7️⃣ Send token to backend for verification
+        const response = await fetch('http://localhost:5000/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          console.log("✅ Backend verified:", result);
+          alert(`Welcome ${result.email}!`);
+          // window.location.href = "dashboard.html"; // optional
+        } else {
+          console.error("❌ Backend rejected:", result.error);
+          alert("❌ Token verification failed by server.");
+        }
+      } catch (err) {
+        alert("❌ Sign-in failed: " + err.message);
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
+
+

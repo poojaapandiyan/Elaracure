@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css" />
+  <title>Sign Up - Elaracure Trainer</title>
+</head>
+<body>
+  <!-- Header Section -->
+  <header class="header">
+    <div class="container">
+      <nav class="navbar">
+        <div class="brand">
+        <img src="logo.png" alt="logo" class="logo-img"/>
+        <a href="index.html" class="logo-text">Elaracure</a>
+        </div>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About us</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="signin.html">Sign In</a></li>
+          <li><a href="signup.html" class="active">Sign Up</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Sign Up Section -->
+  <section class="auth-section">
+    <div class="container">
+      <h1>Sign Up</h1>
+      <form class="auth-form">
+        <div class="form-group">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" placeholder="Create a password" required>
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password:</label>
+          <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password" required>
+        </div>
+        <button type="submit" class="btn primary">Sign Up</button>
+        <p>Already have an account? <a href="signin.html">Sign In</a></p>
+      </form>
+    </div>
+  </section>
+  <footer class="footer">
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+
+  <!-- Firebase Sign-Up Script -->
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqQ-5c3BR1Fr84C72YrnnBLSCCh71Q1A0",
+      authDomain: "elaracure-80917.firebaseapp.com",
+      databaseURL: "https://elaracure-80917-default-rtdb.firebaseio.com",
+      projectId: "elaracure-80917",
+      storageBucket: "elaracure-80917.appspot.com",
+      messagingSenderId: "870899511407",
+      appId: "1:870899511407:web:a521a2ee1154151d961d9a",
+      measurementId: "G-3JT0F7DR5T"
+    };
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    document.querySelector('.auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+      if (password !== confirmPassword) {
+        alert("❌ Passwords do not match!");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userRef = ref(db, 'users/' + user.uid);
+        await set(userRef, {
+          name: name,
+          email: user.email,
+          createdAt: new Date().toISOString()
+        });
+
+        // ✅ Optional: Send token to backend (same as signin.html)
+        // const token = await user.getIdToken();
+        // await fetch('http://localhost:5000/verify-token', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ token })
+        // });
+
+        alert("✅ Sign up successful!");
+        // window.location.href = "signin.html";
+      } catch (error) {
+        console.error(error);
+        alert("❌ Sign-up failed: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
+
+
